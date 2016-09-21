@@ -11,8 +11,8 @@ def clean(filename):
     Reformat the given file to have one sentence per line
     The result is written to filename.out
     """
-    with open(filename) as file:
-        text = ''.join(file.readlines())
+    with open(filename, 'r', encoding='utf-8') as file:
+        text = file.read()
         
         # The file contains 'soft-hyphens', these are replaced with
         # normal hypens '-' so we don't need special cases for them
@@ -32,7 +32,6 @@ def clean(filename):
 
         with open(filename + '.out', 'w') as out_file:
             out_file.write(text)
-            print('Done!')
 
 
 if __name__ == '__main__':
