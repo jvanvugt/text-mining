@@ -1,0 +1,83 @@
+\documentclass{article}
+
+\usepackage{fullpage}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{enumerate}
+
+\title{Text Mining: Week 5}
+\date{\today}
+\author{Joris van Vugt, s4279859}
+\begin{document}
+\maketitle
+\section{Exercise 1: Inter-annotator agreement}
+\subsection{Introduction}
+The goal of this exercise is to do sentiment analysis on comments from a reddit thread. Those sentiments are then compared to those of another annotator using an agreement table and the Cohen's $\kappa$ measure.
+
+\subsection{Difficulties}
+The comments from the reddit thread are sometimes hard to annotate, even for humans. For example, a few of the posts were deleted. I will give a short list of some of the other difficulties:
+\begin{itemize}
+\item \textbf{Reactions to other posts} \\ 
+The content of the parent message sometimes has to be known to figure out the sentiment of the reaction. For example, `\emph{Have you seen it?}' in reply to a positive comment, would imply negative feelings with the author.
+\item \textbf{Inside jokes} \\
+Comments with inside jokes (e.g., `\emph{10/10 comment m8}') also pose problems for sentiment analysis. Reddit is full of these `memes' which require non-standard interpretations of text.
+\item \textbf{World knowledge} \\
+Comments that require background knowledge about other concepts will also be hard to classify. For example, `\emph{Who the fuck cares? It's Teenage Mutant Ninja Turtles.}'. Apart from the bad language, this comment hardly seems to convey any sentiment, on the surface. One would have to know that most people really liked TMNT in their childhoods and infer that this person would like to see another film.
+\end{itemize}
+
+\subsection{Agreement table and Cohen's $\kappa$}
+My fellow data scientist Tanja Crijns was kind enough to give me her annotations of the comments. Comparing these to my own annotations yields the agreement table shown in Table \ref{tbl:agreement}
+
+\begin{table}
+\centering
+\begin{tabular}{|l | l | r | r|}
+\hline
+\multicolumn{2}{|l|}{\multirow{2}{*}{Agreement table}} &
+\multicolumn{2}{c|}{Tanja} \\ \cline{3-4}
+\multicolumn{2}{|l|}{} & P & N \\ \hline
+\multirow{2}{*}{Joris} & P & 19 & 10 \\
+\cline{2-4}
+& N & 8 & 13 \\
+\hline
+\end{tabular}
+\caption{Agreement table}
+\label{tbl:agreement}
+\end{table}
+$$
+\kappa = \frac{p(a) - p(e)}{1- p(e)} 
+$$
+Using the values from the agreement table:
+\begin{flalign}
+p(a) &= \frac{19+13}{19+8+10+13} = \frac{32}{50} = 0.64 && \\
+p(e, \text{yes } | \text{ Joris}) &= \frac{19 + 10}{8+13+19+10} = \frac{29}{50} = 0.58 &&\\
+p(e, \text{yes } | \text{ Tanja}) &= \frac{19 + 8}{10+13+19+8} = \frac{27}{50} = 0.54 &&\\
+p(e, \text{yes}) &= 0.58 \times 0.54 = 0.3132 &&\\
+p(e, \text{no}) &= 0.42 \times 0.46 = 0.1932 &&\\
+p(e) &= 0.3132 + 0.1932 = 0.5064 &&\\
+\kappa &= \frac{0.64 - 0.5064}{1 - 0.5064} \approx \frac{0.1336}{0.4936} \approx 0.27
+\end{flalign}
+\section{Exercise 2: Classifier evaluation}
+\begin{enumerate}[a.]
+\item 
+\begin{enumerate}[i.]
+\item Precision(pos) $= \frac{10}{10+4} = \frac{10}{14} \approx 0.71$
+\item Recall(pos) $= \frac{10}{10+14} = \frac{10}{24} \approx 0.42$
+\end{enumerate}
+\item 
+\begin{enumerate}[i.]
+\item Precision(neg) $= \frac{22}{22+14} = \frac{22}{36} \approx 0.61$
+\item Recall(neg) $= \frac{22}{22+4} = \frac{22}{26} \approx 0.85$
+\end{enumerate}
+\item 
+\begin{enumerate}[i.]
+\item Macro-Precision $\approx \frac{0.71 + 0.61}{2} \approx 0.66$
+\item Macro-Recall $\approx \frac{0.42 + 0.85}{2} \approx 0.64$
+\end{enumerate}
+\item 
+\begin{enumerate}[i.]
+\item Micro-Precision $= \frac{10+22}{10+4+14+22} = \frac{32}{50} = 0.64$
+\item Micro-Recall $= \frac{10+22}{10+4+14+22} = \frac{32}{50} = 0.64$
+\end{enumerate}
+\end{enumerate}
+
+\end{document}
