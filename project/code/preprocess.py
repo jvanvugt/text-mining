@@ -6,28 +6,27 @@ Preprocess an XML file from rechtspraak.nl
 import glob
 import re
 import pickle
+import sys
+import os
+import ntpath
+
 from unidecode import unidecode
-
 from tqdm import tqdm
+    
 
-DATA_FOLDER = 'D:\\Data\\rechstpraak.nl'
-
-def clean(word):
-    """
-    Convert a word to lowercase and remove all
-    non-alphanumeric characters
-    """
-    return re.sub('[^\w-]', '', word.lower())
-
-def preprocess():
+def preprocess(input_folder, output_folder):
     """
     Preprocess all XML-files in the specified folder
+    The cleaned files will be saved in the output folder
 
     Remove the XML-tags and clean the remaining raw text
+    to have one sentence per line
     """
-    files = glob.glob(DATA_FOLDER + '/raw/*.xml')
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
+    files = glob.glob(input_folder + '/*.xml')
     tag_regex = re.compile('<[^>]*>')
-    buffer = []
+    eos_regex = re.compile(r'(\w)\. ([A-Z])')
     for file_name in tqdm(files):
         with open(file_name, 'r', encoding='utf-8') as file:
             try: 
@@ -37,18 +36,22 @@ def preprocess():
                 lines = text.splitlines()
                 # Remove abundant whitespace
                 lines = [line.strip() for line in lines]
-                words = [[clean(word) for word in line.split()] 
-                                for line in lines if line != '']
-                buffer += words
+                # One sentence per line
+                lines = [eos_regex.sub('\\1.\n\\2', line) for line in lines]
+                # Remove empty lines
+                lines = [line for line in lines if line != '']
+                # Change extension to .txt
+                outfile = ntpath.basename(file_name)[:-4] + '.txt'
+                out_name = os.path.join(output_folder, outfile)
+                with open(out_name, 'w', encoding='utf-8') as out:
+                    out.write('\n'.join(lines))
             except UnicodeError:
                 print('Skipping {}, UnicodeError'.format(file_name))
 
-    # Save the preprocessed data           
-    with open(DATA_FOLDER + '/processed/output.pkl', 'wb') as out_file:
-        pickle.dump(buffer, out_file)
-
-
-
 
 if __name__ == '__main__':
-    preprocess()
+    if len(sys.argv) != 3:
+        print('Usage: {} input_folder output_folder'.format(__file__))
+    else:
+        print(sys.argv)
+        preprocess(sys.argv[1], sys.argv[2])
