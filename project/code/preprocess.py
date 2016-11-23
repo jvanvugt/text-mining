@@ -5,14 +5,19 @@ Preprocess an XML file from rechtspraak.nl
 """
 import glob
 import re
-import pickle
-import sys
+import time
 import os
+import multiprocessing
 import ntpath
 
 from unidecode import unidecode
-from tqdm import tqdm
 import frog
+
+
+def sec_to_string(seconds):
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    return "%d:%02d:%02d" % (h, m, s)
 
 def lemmatize(sentence, frogger):
     """
@@ -20,55 +25,69 @@ def lemmatize(sentence, frogger):
     """
     lemmas = [token['lemma'] for token in frogger.process(sentence)]
     return ' '.join(lemmas)
-    
 
-def preprocess(input_folder, output_folder):
+def preprocess(files):
     """
-    Preprocess all XML-files in the specified folder
+    Preprocess a list of XML-files
     The cleaned files will be saved in the output folder
 
     Remove the XML-tags and clean the remaining raw text
     to have one sentence per line with lemmatized words
     """
-    if not os.path.exists(output_folder):
-        os.mkdir(output_folder)
-
-    tag_regex = re.compile('<[^>]*>')
-    eos_regex = re.compile(r'(\w)\. ([A-Z])')
-    punctuation_regex = re.compile(r'[\.,:;/\(\)\[\]\'\"]')
-    frog_options = frog.FrogOptions(tok=False, morph=False, mwu=False, 
-                                    chunking=False, ner=False)
+    frog_options = frog.FrogOptions(tok=False, morph=False, mwu=False,
+                                    chunking=False, ner=False, numThreads=8)
     frogger = frog.Frog(frog_options, '/etc/frog/frog.cfg')
 
-    files = glob.glob(input_folder + '/*.xml')
-    for file_name in tqdm(files):
+    start_time = time.time()
+    for i, file_name in enumerate(files):
         with open(file_name, 'r', encoding='utf-8') as file:
             try:
                 text = unidecode(file.read())
                 # Remove all XML tags
-                text = tag_regex.sub('', text)
+                text = re.sub('<[^>]*>', '', text)
                 lines = text.splitlines()
                 # Remove abundant whitespace
                 lines = [line.strip() for line in lines]
                 # One sentence per line
-                lines = [eos_regex.sub('\\1.\n\\2', line) for line in lines]
+                lines = [re.sub(r'(\w)\. ([A-Z])', '\\1.\n\\2', line)
+                         for line in lines]
                 # Remove punctuation
-                lines = [punctuation_regex.sub('', line) for line in lines]
+                lines = [re.sub(r'[\.,:;/\(\)\[\]\'\"]', '', line)
+                         for line in lines]
                 # Remove empty lines and make lower case
                 lines = [line.lower() for line in lines if line != '']
                 # Convert each word to its lemma
                 lemmas = [lemmatize(line, frogger) for line in lines]
                 # Change extension to .txt
                 outfile = ntpath.basename(file_name)[:-4] + '.txt'
-                out_name = os.path.join(output_folder, outfile)
+                out_name = os.path.join(OUTPUT_FOLDER, outfile)
                 with open(out_name, 'w', encoding='utf-8') as out:
                     out.write('\n'.join(lemmas))
+                if i % 49 == 0 and i != 0:
+                    print('Done {}/{}'.format(i, len(files)))
+                    time_per_doc = (time.time() - start_time) / i
+                    print('Average time/document:', sec_to_string(time_per_doc))
+                    time_remaining = time_per_doc * (len(files) - i)
+                    print('Time remaining:', sec_to_string(time_remaining))
             except UnicodeError:
                 print('Skipping {}, UnicodeError'.format(file_name))
 
-
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print('Usage: {} input_folder output_folder'.format(__file__))
-    else:
-        preprocess(sys.argv[1], sys.argv[2])
+    s = time.time()
+    INPUT_FOLDER = '/data/raw'
+    OUTPUT_FOLDER = '/data/processed'
+    n_jobs = 4
+    print('CPU Count: ', multiprocessing.cpu_count())
+
+    if not os.path.exists(OUTPUT_FOLDER):
+        os.mkdir(OUTPUT_FOLDER)
+
+    files = glob.glob(INPUT_FOLDER + '/*.xml')[:200]
+    n_files = len(files)
+    # multiprocessing
+    pool = multiprocessing.Pool(n_jobs)
+    # Split files into evenly sized chunks
+    chunksize = 50
+    file_chunks = [files[i:i+chunksize] for i in range(0, n_files, chunksize)]
+    pool.map(preprocess, file_chunks)
+    print((time.time()-s)/ 200)
