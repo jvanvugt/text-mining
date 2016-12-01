@@ -38,7 +38,7 @@ def preprocess(files):
     """
     frog_options = frog.FrogOptions(tok=False, morph=False, mwu=True,
                                     chunking=False, ner=False, numThreads=8)
-    frogger = frog.Frog(frog_options, '/etc/frog/frog.cfg')
+    frogger = frog.Frog(frog_options, '/vol/customopt/lamachine/etc/frog/frog.cfg')
 
     start_time = time.time()
     for i, file_name in enumerate(files):
@@ -78,14 +78,14 @@ if __name__ == '__main__':
     s = time.time()
     INPUT_FOLDER = '/scratch/jvvugt/raw'
     OUTPUT_FOLDER = '/scratch/jvvugt/processed'
-    n_jobs = 1
+    n_jobs = 16
     print('CPU Count: ', multiprocessing.cpu_count())
     print('n_jobs:', n_jobs)
 
     if not os.path.exists(OUTPUT_FOLDER):
         os.mkdir(OUTPUT_FOLDER)
 
-    files = glob.glob(INPUT_FOLDER + '/*.xml')[:20]
+    files = glob.glob(INPUT_FOLDER + '/*.xml')
     n_files = len(files)
     print('%d files found in %s' % (n_files, INPUT_FOLDER))
     print('Writing to', OUTPUT_FOLDER)
