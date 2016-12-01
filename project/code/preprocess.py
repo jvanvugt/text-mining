@@ -15,6 +15,9 @@ import frog
 
 
 def sec_to_string(seconds):
+    """
+    Convert seconds to HH:MM:SS string
+    """
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
     return "%d:%02d:%02d" % (h, m, s)
@@ -34,7 +37,7 @@ def preprocess(files):
     Remove the XML-tags and clean the remaining raw text
     to have one sentence per line with lemmatized words
     """
-    frog_options = frog.FrogOptions(tok=False, morph=False, mwu=False,
+    frog_options = frog.FrogOptions(tok=False, morph=False, mwu=True,
                                     chunking=False, ner=False, numThreads=8)
     frogger = frog.Frog(frog_options, '/etc/frog/frog.cfg')
 
@@ -74,20 +77,20 @@ def preprocess(files):
 
 if __name__ == '__main__':
     s = time.time()
-    INPUT_FOLDER = '/data/raw'
-    OUTPUT_FOLDER = '/data/processed'
-    n_jobs = 4
+    INPUT_FOLDER = '/scratch/jvvugt/raw'
+    OUTPUT_FOLDER = '/scratch/jvvugt/raw'
+    n_jobs = 16
     print('CPU Count: ', multiprocessing.cpu_count())
 
     if not os.path.exists(OUTPUT_FOLDER):
         os.mkdir(OUTPUT_FOLDER)
 
-    files = glob.glob(INPUT_FOLDER + '/*.xml')[:200]
+    files = glob.glob(INPUT_FOLDER + '/*.xml')
     n_files = len(files)
     # multiprocessing
     pool = multiprocessing.Pool(n_jobs)
     # Split files into evenly sized chunks
-    chunksize = 50
+    chunksize = n_files / n_jobs
     file_chunks = [files[i:i+chunksize] for i in range(0, n_files, chunksize)]
     pool.map(preprocess, file_chunks)
-    print((time.time()-s)/ 200)
+    print((time.time()-s))
