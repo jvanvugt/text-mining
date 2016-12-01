@@ -42,6 +42,11 @@ def preprocess(files):
 
     start_time = time.time()
     for i, file_name in enumerate(files):
+        outfile = ntpath.basename(file_name)[:-4] + '.txt'
+        out_name = os.path.join(OUTPUT_FOLDER, outfile)
+        if os.path.isfile(out_name):
+            print('Already done:', out_name)
+            continue
         with open(file_name, 'r', encoding='utf-8') as file:
             try:
                 text = file.read()
@@ -61,8 +66,6 @@ def preprocess(files):
                 # Convert each word to its lemma
                 lemmas = [lemmatize(line, frogger) for line in lines]
                 # Change extension to .txt
-                outfile = ntpath.basename(file_name)[:-4] + '.txt'
-                out_name = os.path.join(OUTPUT_FOLDER, outfile)
                 with open(out_name, 'w', encoding='utf-8') as out:
                     out.write('\n'.join(lemmas))
                 if i % 49 == 0 and i != 0:
@@ -78,7 +81,7 @@ if __name__ == '__main__':
     s = time.time()
     INPUT_FOLDER = '/scratch/jvvugt/raw'
     OUTPUT_FOLDER = '/scratch/jvvugt/processed'
-    n_jobs = 16
+    n_jobs = 4
     print('CPU Count: ', multiprocessing.cpu_count())
     print('n_jobs:', n_jobs)
 
@@ -94,5 +97,9 @@ if __name__ == '__main__':
     # Split files into evenly sized chunks
     chunksize = round(n_files / n_jobs)
     file_chunks = [files[i:i+chunksize] for i in range(0, n_files, chunksize)]
-    pool.map(preprocess, file_chunks)
+    try:
+        pool.map(preprocess, file_chunks)
+    finally:
+        pool.close()
+        pool.join()
     print((time.time()-s))
