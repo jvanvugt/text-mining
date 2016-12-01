@@ -10,7 +10,6 @@ import os
 import multiprocessing
 import ntpath
 
-from unidecode import unidecode
 import frog
 
 
@@ -45,7 +44,7 @@ def preprocess(files):
     for i, file_name in enumerate(files):
         with open(file_name, 'r', encoding='utf-8') as file:
             try:
-                text = unidecode(file.read())
+                text = file.read()
                 # Remove all XML tags
                 text = re.sub('<[^>]*>', '', text)
                 lines = text.splitlines()
@@ -78,19 +77,22 @@ def preprocess(files):
 if __name__ == '__main__':
     s = time.time()
     INPUT_FOLDER = '/scratch/jvvugt/raw'
-    OUTPUT_FOLDER = '/scratch/jvvugt/raw'
-    n_jobs = 16
+    OUTPUT_FOLDER = '/scratch/jvvugt/processed'
+    n_jobs = 1
     print('CPU Count: ', multiprocessing.cpu_count())
+    print('n_jobs:', n_jobs)
 
     if not os.path.exists(OUTPUT_FOLDER):
         os.mkdir(OUTPUT_FOLDER)
 
-    files = glob.glob(INPUT_FOLDER + '/*.xml')
+    files = glob.glob(INPUT_FOLDER + '/*.xml')[:20]
     n_files = len(files)
+    print('%d files found in %s' % (n_files, INPUT_FOLDER))
+    print('Writing to', OUTPUT_FOLDER)
     # multiprocessing
     pool = multiprocessing.Pool(n_jobs)
     # Split files into evenly sized chunks
-    chunksize = n_files / n_jobs
+    chunksize = round(n_files / n_jobs)
     file_chunks = [files[i:i+chunksize] for i in range(0, n_files, chunksize)]
     pool.map(preprocess, file_chunks)
     print((time.time()-s))
