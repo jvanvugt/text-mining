@@ -14,18 +14,23 @@ def read_file(filepath):
     Read a file and convert it to a list of sentences
     The sentences are lists of words
     """
-    with open(filepath) as file:
-        lines = file.read().splitlines()
-        return [line.split() for line in  lines]
+    with open(filepath, encoding='utf-8') as file:
+        try:
+            lines = file.read().splitlines()
+            return [line.split() for line in  lines]
+        except UnicodeError:
+            print('UnicodeError, Skipping:', filepath)
+            return ''
 
 def concatenate_files(input_folder):
     """
-    Concatenate the contents of all .txt
-    files in input_folder into a single list
+    Iterate over all lines in each file in input_folder
+    This avoids having to load all files at once
     """
     files = glob.glob(input_folder + '/*.txt')
-    contents = [read_file(f) for f in files]
-    return sum(contents, [])
+    for file in files:
+        for line in read_file(file):
+            yield line
 
 def train_model(input_folder, output_file):
     """
