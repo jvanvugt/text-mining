@@ -1,20 +1,43 @@
 \documentclass{article}
 
 \usepackage{multicol}
+\usepackage{cite}
+\usepackage{hyperref}
 
 
 \author{Joris van Vugt, s4279859}
-\date{\today}
-\title{Automatic Thesauris Generation in the Legal Domain using Word Embeddings}
+\date{CONCEPT DRAFT, \today}
+\title{Automatic Thesauris Generation in the Legal Domain using Word Embeddings and Latent Semantic Analysis}
 
 \begin{document}
 \maketitle
 \begin{multicols}{2}
 \section{Introduction}
-\section{Methods}
-\section{Results}
-\section{Conclusion}
+\par The goal of the project is to develop a model for automatic thesauris generation of legal documents. Thesauri are used by legal professionals to aid the extraction of relevant documents with specialized search engines. Manually building and maintaining a thesauris is a labor-intensive process. Automatic thesauris generation is thus very useful, but often comes at the cost of lower quality. In this project, I will define and validate an approach for thesauris generation using modern machine learning techniques. My research question is:
 
+\par \emph{Can modern machine learning techniques improve the quality of automatically generated thesauri?}
+
+\par The dataset consists of 300.000 public Dutch legal documents in  XML format
+
+\par *Related work*
+
+\par *Overview of paper*
+
+
+\section{Methods}
+\subsection{Preprocessing}
+All plain text is extracted from the XML files and lemmatization and multi-word-unit detection is applied using Frog\cite{bosch2007efficient}.
+\subsection{Thesauris Generation}
+\subsubsection{Word Embeddings}
+Word2Vec\cite{mikolov2013distributed} implementation from gensim\cite{rehurek_lrec}. For each pair of words, the cosine similarity is computed. The top-$n$ most similar words are added to the thesaurus entry for that word. Low $n$ should lead to high precision, while high $n$ should lead to high recall. A threshold similarity can be computed instead, so that words can have a varying number of relatives.
+\subsubsection{Latent Semantic Analysis}
+Using latent dirichlet allocation (LDA)\cite{blei2003latent}, non-negative matrix factorization (NMF) and/or singular value decomposition (SVD) from scikit-learn\cite{scikit-learn}. Cosine similarity over distribution of topics can be computed. See Section 4.2 of \cite{stevens2012exploring}.
+\subsection{Evaluation Metrics}
+Recall, precision and Jaccard similarity (?) averaged over all words in the thesaurus. Public legal thesaurus from the government is used as the ground-truth. This thesauris makes a distinction between related terms, broader terms, etc., but those are all deemed equally relevant in this task.
+\section{Results}
+-
+\section{Conclusion}
+-
 \bibliographystyle{unsrt}
 \bibliography{references}
 \end{multicols}
