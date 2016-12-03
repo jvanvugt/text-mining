@@ -10,6 +10,7 @@ import pickle
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 import numpy as np
+from tqdm import trange
 
 def cosine_similarity(a, b):
     """Compute the cosine similarity between 2 vectors"""
@@ -28,11 +29,11 @@ def build_thesaurus(model, words, top_n=5):
     thesaurus = {}
     dist = model.components_
     n_words = len(words)
-    for word_idx in range(n_words):
+    for word_idx in trange(n_words):
         sims = [cosine_similarity(dist[:, word_idx], dist[:, other])
                 for other in range(n_words)]
-        top_n = np.argsort(sims)[:-top_n-2:-1][:1]
-        related_words = [words[i] for i in top_n]
+        top_n_words = np.argsort(sims)[:-top_n-2:-1][:1]
+        related_words = [words[i] for i in top_n_words]
         thesaurus[words[word_idx]] = related_words
     return thesaurus
 
