@@ -9,6 +9,8 @@ import xml.etree.ElementTree as ET
 
 from gensim.models import Word2Vec
 from tqdm import tqdm
+import numpy as np
+from scipy.spatial.distance import pdist, squareform
 
 def build_from_xml(input_file):
     """
@@ -44,10 +46,18 @@ def build_from_w2v(input_file, n=5):
     """
     print('Loading model...')
     model = Word2Vec.load_word2vec_format(input_file, binary=True)
-    print('Building thesauris...')
+    print('Calculating distances...')
+    words = sorted(model.vocab)
+    print(len(words))
+    vectors = np.zeros((len(words), len(model[words[0]])), dtype=np.float32)
+    for i, word in enumerate(tqdm(words)):
+        vectors[i, :] = model[word]
+    dists = squareform(pdist(vectors, 'cosine'))
+    top_n = np.argsort(dists, axis=1)[:, :len(words)-n-1:-1]
+    print('Building thesaurus...')
     thesaurus = {}
-    for word in tqdm(model.vocab):
-        thesaurus[word] = [w[0] for w in model.most_similar([word], topn=n)]
+    for i, word in enumerate(tqdm(words)):
+        thesaurus[word] = [words[i] for i in top_n[i]]
 
     with open(input_file + '.ths', 'wb') as file:
         pickle.dump(thesaurus, file)
