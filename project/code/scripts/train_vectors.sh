@@ -1,0 +1,1 @@
+word2vec -train /scratch/jvvugt/data.txt -output /scratch/jvvugt/vectors.bin -size 300 -window 10 -hs 1 -threads 24 -min-count 30 -cbow 0 -binary 1
