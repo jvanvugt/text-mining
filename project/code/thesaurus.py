@@ -7,7 +7,6 @@ import sys
 import pickle
 import xml.etree.ElementTree as ET
 
-from gensim.models import Word2Vec
 from tqdm import tqdm
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
@@ -45,10 +44,11 @@ def build_from_w2v(input_file, n=5):
     The current implementation is quite slow and memory intensive
     """
     print('Loading model...')
-    model = Word2Vec.load_word2vec_format(input_file, binary=True)
+    with open(input_file, 'rb') as file:
+        model = pickle.load(file)
     print('Calculating distances...')
-    words = sorted(model.vocab)
-    print(len(words))
+    words = sorted(model.keys())
+    print('%d words in vocabulary' % len(words))
     vectors = np.zeros((len(words), len(model[words[0]])), dtype=np.float32)
     for i, word in enumerate(tqdm(words)):
         vectors[i, :] = model[word]
