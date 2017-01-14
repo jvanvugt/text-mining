@@ -57,7 +57,7 @@ def build_from_w2v(input_file, n=5):
     print('Building thesaurus...')
     thesaurus = {}
     for i, word in enumerate(tqdm(words)):
-        thesaurus[word] = [words[i] for i in top_n[i]]
+        thesaurus[word] = [words[top] for top in top_n[i]]
 
     with open(input_file + '.ths', 'wb') as file:
         pickle.dump(thesaurus, file)
