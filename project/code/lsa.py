@@ -46,7 +46,7 @@ def build_model(input_folder, output_file):
     files = glob.glob(input_folder + '/*.txt')
     data = [read_file(file_name) for file_name in files]
     print('Creating tf-matrix...')
-    tf_vectorizer = CountVectorizer(max_df=0.95, min_df=5, stop_words=None)
+    tf_vectorizer = CountVectorizer(max_df=0.95, min_df=50, stop_words=None)
     tf = tf_vectorizer.fit_transform(data)
     print('Training model...')
     lda = LatentDirichletAllocation(n_topics=100, max_iter=5,
