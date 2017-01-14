@@ -52,9 +52,18 @@ def build_from_w2v(input_file, n=20):
     vectors = np.zeros((len(words), len(model[words[0]])), dtype=np.float32)
     for i, word in enumerate(tqdm(words)):
         vectors[i, :] = model[word]
-    dists = squareform(pdist(vectors, 'cosine'))
+    m = len(words)
+    norms = np.einsum('ij,ij->i', vectors, vectors, dtype=np.double)
+    np.sqrt(norms, out=norms)
+    nV = norms.reshape(m, 1)
+    # The numerator u * v
+    nm = np.dot(vectors, vectors.T)
+    # The denom. ||u||*||v||
+    de = np.dot(nV, nV.T)
+    dm = 1.0 - (nm / de)
+    dm[np.arange(m), np.arange(0, m)] = 0.0
     print('Computing top_n words....')
-    top_n = np.argsort(dists, axis=1)[:, 1:n+1]
+    top_n = np.argsort(dm, axis=1)[:, 1:n+1]
     print('Building thesaurus...')
     thesaurus = {}
     for i, word in enumerate(tqdm(words)):
