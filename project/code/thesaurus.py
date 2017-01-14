@@ -53,6 +53,7 @@ def build_from_w2v(input_file, n=20):
     for i, word in enumerate(tqdm(words)):
         vectors[i, :] = model[word]
     dists = squareform(pdist(vectors, 'cosine'))
+    print('Computing top_n words....')
     top_n = np.argsort(dists, axis=1)[:, :len(words)-n-1:-1]
     print('Building thesaurus...')
     thesaurus = {}
