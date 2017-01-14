@@ -36,7 +36,7 @@ def build_from_xml(input_file):
         pickle.dump(thesaurus, file)
 
 
-def build_from_w2v(input_file, n=5):
+def build_from_w2v(input_file, n=20):
     """
     Build a thesauris from a Word2Vec model
     The n most similar words are chosen as related
