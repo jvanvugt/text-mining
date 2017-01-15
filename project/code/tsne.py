@@ -7,7 +7,7 @@ from sklearn.manifold import TSNE
 
 def run(filename):
     with open(filename, 'rb') as file:
-        model = pickle.load(filename)
+        model = pickle.load(file)
     words = sorted(model.keys())
     vectors = np.zeros((len(words), len(model[words[0]])), dtype=np.float32)
     for i, word in enumerate(words):
