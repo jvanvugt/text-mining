@@ -36,31 +36,33 @@ def average(thesaurus, ground_truth, function=precision, n=None):
     return result, not_included
 
 
-def compute_stats(ths_file, gt_file, n=20):
-    with open(ths_file, 'rb') as tf, open(gt_file, 'rb') as gtf:
-        thesaurus = pickle.load(tf)
+def compute_stats(ths_file1, ths_file2, gt_file, n=20):
+    with open(ths_file1, 'rb') as tf1, \
+            open(ths_file2, 'rb') as tf2, \
+            open(gt_file, 'rb') as gtf:
+        th1 = pickle.load(tf1)
+        th2 = pickle.load(tf2)
         ground_truth = pickle.load(gtf)
-    
-    recalls, precisions = [], []
-    for i in range(1, 20):
-        recall_n, _ = average(thesaurus, ground_truth, function=recall, n=i)
-        prec_n, _ = average(thesaurus, ground_truth, function=precision, n=i)
-        recalls.append(recall_n)
-        precisions.append(prec_n)
-    
-    print('Recalls:')
-    print(recalls)
-    print('\n\nPrecisions:')
-    print(precisions)
 
-    plt.plot(recalls, precisions)
+    r1, r2, p1, p2 = [], [], [], []
+    for i in range(1, 20):
+        r1.append(average(th1, ground_truth, function=recall, n=i)[0])
+        r2.append(average(th2, ground_truth, function=recall, n=i)[0])
+        p1.append(average(th1, ground_truth, function=precision, n=i)[0])
+        p2.append(average(th2, ground_truth, function=precision, n=i)[0])
+    
+    for a in r1, r2, p1, p2:
+        print(a)
+
+    plt.plot(r1, p1, label='Word2Vec')
+    plt.plot(r2, p2, label='LSA')
+    plt.legend()
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title('Precision-Recall curve')
     plt.show()
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print('Usage: python {} thesaurus ground_truth'.format(__file__))
+    if len(sys.argv) != 4:
+        print('Usage: python {} thesaurus1 thesaurus2 ground_truth'.format(__file__))
     else:
-        compute_stats(sys.argv[1], sys.argv[2])
+        compute_stats(sys.argv[1], sys.argv[2], sys.argv[3])
