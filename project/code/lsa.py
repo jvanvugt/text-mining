@@ -9,12 +9,9 @@ import pickle
 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
-import numpy as np
-from tqdm import trange
+from sklearn.externals import joblib
+import pickle
 
-def cosine_similarity(a, b):
-    """Compute the cosine similarity between 2 vectors"""
-    return a.T.dot(b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
 def read_file(filename):
     """Open a file and return its content"""
@@ -22,20 +19,16 @@ def read_file(filename):
         return file.read()
 
 
-def build_thesaurus(model, words, top_n=5):
+def build_vectors(model, words):
     """
-    Build a thesaurus based on the topic distributions from the model
+    Build a a dictionary of vectors based on the topic distributions from the model
     """
-    thesaurus = {}
     dist = model.components_
     n_words = len(words)
-    for word_idx in trange(n_words):
-        sims = [cosine_similarity(dist[:, word_idx], dist[:, other])
-                for other in range(n_words)]
-        top_n_words = np.argsort(sims)[:-top_n-2:-1][:1]
-        related_words = [words[i] for i in top_n_words]
-        thesaurus[words[word_idx]] = related_words
-    return thesaurus
+    vectors = {}
+    for word_idx in range(n_words):
+        vectors[words[word_idx]] = dist[:, word_idx]
+    return vectors
 
 def build_model(input_folder, output_file):
     """
@@ -57,13 +50,15 @@ def build_model(input_folder, output_file):
     lda.fit(tf)
     print('Building thesaurus...')
     words = tf_vectorizer.get_feature_names()
-    thesaurus = build_thesaurus(lda, words)
+    vectors = build_vectors(lda, words)
     with open(output_file, 'wb') as out_file:
-        pickle.dump(thesaurus, out_file)
+        pickle.dump(vectors, out_file)
 
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
         print('Usage:\npython {} input_folder output_file'.format(__file__))
     else:
-        build_model(sys.argv[1], sys.argv[2])
+        vectors = build_vectors(joblib.load(sys.argv[1]), joblib.load(sys.argv[2]).get_feature_names())
+        pickle.dump(vectors, open(sys.argv[1] + 'vectors', 'wb'))
+        # build_model(sys.argv[1], sys.argv[2])
