@@ -36,7 +36,7 @@ def build_from_xml(input_file):
         pickle.dump(thesaurus, file)
 
 
-def build_from_w2v(input_file, n=20):
+def build_from_w2v(input_file, n=20, distance_metric='cosine'):
     """
     Build a thesauris from a Word2Vec model
     The n most similar words are chosen as related
@@ -58,7 +58,7 @@ def build_from_w2v(input_file, n=20):
     vectors = np.zeros((len(words), len(model[words[0]])), dtype=np.float32)
     for i, word in enumerate(tqdm(words)):
         vectors[i, :] = model[word]
-    dists = squareform(pdist(vectors, 'cosine'))
+    dists = squareform(pdist(vectors, distance_metric))
     print('Computing top_n words....')
     top_n = np.argsort(dists, axis=1)[:, 1:n]
     print('Building thesaurus...')
